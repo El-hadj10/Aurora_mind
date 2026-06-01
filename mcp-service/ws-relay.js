@@ -2,31 +2,16 @@
 // Usage: node mcp-service/ws-relay.js
 
 const WebSocket = require('ws');
-const { StdioClientTransport } = require('@modelcontextprotocol/sdk/dist/cjs/client/stdio.js');
-const { Client } = require('@modelcontextprotocol/sdk/dist/cjs/client/index.js');
+const { StdioClientTransport } = require('./node_modules/@modelcontextprotocol/sdk/dist/cjs/client/stdio.js');
+const { Client } = require('./node_modules/@modelcontextprotocol/sdk/dist/cjs/client/index.js');
 
 const MCP_SERVERS = [
-  { // Chrome DevTools Relay
-    name: 'chrome-devtools-relay',
-    command: 'npx',
-    args: ['-y', '@modelcontextprotocol/server-chrome-devtools']
-  },
-  { 
-    name: 'playwright-relay',
-    command: 'npx',
-    args: ['-y', '@modelcontextprotocol/server-playwright']
-  },
-  { // GitHub Server
+  {
     name: 'github-server',
     command: 'npx',
     args: ['-y', '@modelcontextprotocol/server-github'],
     env: { GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_TOKEN || process.env.GITHUB_PERSONAL_ACCESS_TOKEN || '' }
   },
-  { // MongoDB Server
-    name: 'mongodb-server',
-    command: 'npx',
-    args: ['-y', '@modelcontextprotocol/server-mongodb', 'mongodb://localhost:27017']
-  }
 ];
 
 const backendMcpClients = {}; // Stores the actual MCP Client instances for backend servers
@@ -57,22 +42,11 @@ async function connectAllBackendMcpServers() {
       });
       const client = new Client({ name: `aurora-relay-${config.name}`, version: "1.0.0" }, { capabilities: {} });
 
-      client.onConnect(() => {
-        backendMcpClientStatus[config.name] = true;
-        console.log(`[MCP-Relay] Backend server ${config.name} connected.`);
-        broadcastServerStatuses(); // Notify frontends
-      });
-
-      client.onClose(() => {
-        backendMcpClientStatus[config.name] = false;
-        console.log(`[MCP-Relay] Backend server ${config.name} disconnected.`);
-        broadcastServerStatuses(); // Notify frontends
-      });
-
       await client.connect(transport);
       backendMcpClients[config.name] = client;
-      backendMcpClientStatus[config.name] = true; // Initial status
-      console.log(`[MCP-Relay] Attempting to connect to backend server: ${config.name}`);
+      backendMcpClientStatus[config.name] = true;
+      console.log(`[MCP-Relay] Backend server ${config.name} connected.`);
+      broadcastServerStatuses();
     } catch (e) {
       console.error(`[MCP-Relay] Failed to connect to backend server ${config.name}:`, e.message);
       backendMcpClientStatus[config.name] = false; // Mark as failed

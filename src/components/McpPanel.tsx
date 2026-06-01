@@ -92,9 +92,10 @@ export const McpPanel: React.FC = () => {
             )}
 
             {error && (
-              <p className="text-xs text-rose-500 bg-rose-50 dark:bg-rose-950/40 rounded-lg px-2 py-1">
-                {error}
-              </p>
+              <div className="text-xs text-rose-400 bg-rose-50 dark:bg-rose-950/40 rounded-lg px-2 py-1.5 flex flex-col gap-0.5">
+                <span className="font-semibold text-rose-500">⚠ Relay déconnecté</span>
+                <span className="text-rose-400/80 break-words">{error}</span>
+              </div>
             )}
 
             {/* Payload editor */}

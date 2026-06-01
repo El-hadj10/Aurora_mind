@@ -63,7 +63,16 @@ export const useMcpStore = create<McpState>((set, get) => ({
       set({ relayClient: client, relayConnected: true, isConnecting: false });
       console.log(`[MCP] Connecté au relay WebSocket`);
     } catch (err) {
-      set({ error: (err as Error).message, isConnecting: false });
+      // err peut être un Event WebSocket (isTrusted:true) ou une vraie Error
+      let msg: string;
+      if (err instanceof Error) {
+        msg = err.message || "Erreur inconnue";
+      } else if (err && typeof err === "object" && "type" in err) {
+        msg = "Relay MCP inaccessible (ws://localhost:3031) — lancez : cd mcp-service && node ws-relay.js";
+      } else {
+        msg = String(err) || "Erreur de connexion WebSocket";
+      }
+      set({ error: msg, isConnecting: false });
       console.error("[MCP] Erreur de connexion:", err);
     }
   },
